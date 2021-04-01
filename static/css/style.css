@@ -1,0 +1,15 @@
+h1 {
+    border: 2px rgb(25, 27, 141) solid;
+    color: brown;
+    text-align: center;
+    padding: 10px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 1px solid #1999;
+    padding: 0.5rem;
+}
