@@ -8,7 +8,7 @@ function table_fill(json) {
 		const NAME_ROW = 0;
 		const V_ROW = 2;
 		var table = document.getElementById('status');
-		tbody = table.children[table.children.length - 1];
+		var tbody = table.children[table.children.length - 1];
 		for (let row of tbody.children) {
 			for (let cell of row.children) {
 				if (cell.cellIndex != NAME_ROW) {
@@ -21,6 +21,20 @@ function table_fill(json) {
 				}
 			}
 		}
+		table = document.getElementById('flags');
+		tbody = table.children[table.children.length - 1];
+		for (let row of tbody.children) {
+			for (let cell of row.children) {
+				var flagArr = json.flags[row.rowIndex - 1];
+				if (flagArr[cell.cellIndex]) {
+					cell.style.backgroundColor = "yellow";
+				}
+				else {
+					cell.style.backgroundColor = "white";
+				}
+			}
+		}
+
 		var date = new Date(json.timestamp * 1000);
 		var hours = date.getHours();
 		var minutes = "0" + date.getMinutes();

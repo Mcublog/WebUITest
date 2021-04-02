@@ -13,6 +13,13 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "monitor",
+            "type": "python",
+            "request": "launch",
+            "program": "flaskr/monitor.py",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Current",
             "type": "python",
             "request": "launch",
