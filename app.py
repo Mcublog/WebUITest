@@ -1,62 +1,44 @@
-from flask import Flask, render_template, render_template_string, jsonify, make_response
-from flask_table import Table, Col
+from flask import Flask, render_template, render_template_string, jsonify, send_from_directory
+import threading, time, os
+from copy import deepcopy
 
-# Declare your table
-class ItemTable(Table):
-    name = Col('Cell')
-    temp = Col('t C')
-    volt = Col('V mV')
-
-    # def __init__(self, items, classes, thead_classes, sort_by, sort_reverse, no_items, table_id, border, html_attrs):
-    #     super().__init__(items, classes=classes, thead_classes=thead_classes, sort_by=sort_by, sort_reverse=sort_reverse, no_items=no_items, table_id=table_id, border=border, html_attrs=html_attrs)
-    #     self.th_contents
-
-
-# Get some objects
-class Item(object):
-    def __init__(self, name, temp, volt):
-        self.name = name
-        self.temp = temp
-        self.volt = volt
-
-
-
-BATTARY_NUM = 16
-def create_table() -> Table:
-    items = []
-    for i in range(BATTARY_NUM):
-        items.append(Item('#%d' % i, 0, 0))
-    table = ItemTable(items, table_id='status')
-    return table
-
-
-def render_js(fname, **kwargs):
-    with open(fname) as fin:
-        script = fin.read()
-        rendered_script = render_template_string(script, **kwargs)
-        return rendered_script
+from flask_table import table
+from flaskr.monitor import monitor_init, get_js_render, get_status_table, get_status_value
 
 
 app = Flask(__name__)
-table = create_table()
+
+
+@app.before_first_request
+def _init():
+    monitor_init()
+
+
+@app.route('/favicon.ico')
+def fav():
+    return send_from_directory(os.path.join(app.root_path, 'static'),'favicon.ico')
 
 
 @app.route('/')
-def hello():
-    for item in table.items:
-        item.temp += 1
-    js = render_js('static/index.js', a="wow")
-    return render_template('index.html', js=js, table=table, cal=table)
+def update_page():
+    js = get_js_render()
+    return render_template('index.html', js=js, table=get_status_table())
 
 
 @app.route('/update', methods=['GET'])
 def update():
-    for item in table.items:
-        item.temp += 1
-
-    tempList = list(map(lambda item: item.temp, table.items))
-    return jsonify({"result": "OK", "response": True, "t": tempList})
+    status = get_status_value()
+    if status != None:
+        table = get_status_table()
+        for (item, v, t) in zip(table.items, status['vbat'].values(), status['tbat'].values()):
+            item.volt = v
+            item.temp = t
+        tempList = list(map(lambda item: item.temp, table.items))
+        voltList = list(map(lambda item: item.volt, table.items))
+        return jsonify({"result": "OK", "t": tempList, 'v': voltList, 'timestamp': status['timestamp']})
+    else:
+        return jsonify({"result": "FAILED"})
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
